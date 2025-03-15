@@ -1,7 +1,7 @@
 from seam_carving import SeamCarver
 
 import os
-
+import time
 
 
 def image_resize_without_mask(filename_input, filename_output, new_height, new_width):
@@ -33,17 +33,19 @@ if __name__ == '__main__':
     filename_output = 'image_result2.png'
     filename_mask = 'mask.jpg'
     new_height = 400
-    new_width = 408
+    new_width = 400
 
     input_image = os.path.join(folder_in, "images", filename_input)
     input_mask = os.path.join(folder_in, "masks", filename_mask)
     output_image = os.path.join(folder_out, "images", filename_output)
 
+    start_time = time.time()  
     image_resize_without_mask(input_image, output_image, new_height, new_width)
     #image_resize_with_mask(input_image, output_image, new_height, new_width, input_mask)
     #object_removal(input_image, output_image, input_mask)
 
-
+    end_time = time.time()
+    print(f"image resize took {end_time - start_time:.4f} seconds")
 
 
 

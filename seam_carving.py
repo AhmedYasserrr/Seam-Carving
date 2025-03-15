@@ -11,12 +11,6 @@ class SeamCarver:
         # read in image and store as np.float64 format
         self.in_image = cv2.imread(filename).astype(np.float64)
         self.in_height, self.in_width = self.in_image.shape[: 2]
-        
-        # org image to draw removed seams above
-        self.h, self.w, _ = self.in_image.shape
-        self.org_image = np.copy(self.in_image)
-        self.index_map = np.tile(np.arange(self.w), (self.h, 1))
-        self.seams = []
 
         # keep tracking resulting image
         self.out_image = np.copy(self.in_image)
@@ -74,10 +68,12 @@ class SeamCarver:
 
         # calculate number of rows and columns needed to be inserted or removed
         delta_row, delta_col = int(self.out_height - self.in_height), int(self.out_width - self.in_width)
-
+        self.row_image = None
         # remove column
         if delta_col < 0:
+            self.col_image = self.set_seams_tracking()
             self.seams_removal(delta_col * -1)
+            self.col_image = self.visualize_removed_seams(self.col_image)
         # insert column
         elif delta_col > 0:
             self.seams_insertion(delta_col)
@@ -87,8 +83,14 @@ class SeamCarver:
             self.out_image = self.rotate_image(self.out_image, 1)
             if self.protect:
                 self.mask = self.rotate_mask(self.mask, 1)
+            
+            self.row_image = self.set_seams_tracking()
             self.seams_removal(delta_row * -1)
+            self.row_image = self.visualize_removed_seams(self.row_image)
+            self.row_image = self.rotate_image(self.row_image, 0)
+
             self.out_image = self.rotate_image(self.out_image, 0)
+            
         # insert row
         elif delta_row > 0:
             self.out_image = self.rotate_image(self.out_image, 1)
@@ -97,6 +99,11 @@ class SeamCarver:
             self.seams_insertion(delta_row)
             self.out_image = self.rotate_image(self.out_image, 0)
 
+    def set_seams_tracking(self):
+            self.h, self.w, _ = self.out_image.shape
+            self.index_map = np.tile(np.arange(self.w), (self.h, 1))
+            self.seams = []
+            return np.copy(self.out_image)
 
     def object_removal(self):
         """
@@ -156,12 +163,13 @@ class SeamCarver:
                     self.index_map[row, seam_idx[row]:-1] = self.index_map[row, seam_idx[row] + 1:]
 
 
-    def visualize_removed_seams(self):
+    def visualize_removed_seams(self, org_image):
         # Draw all removed seams on the original image
         for seam in self.seams:
             for row in range(self.h):
                 col = seam[row]
-                self.org_image[row, col] = [0, 0, 255]  # Mark seams in red
+                org_image[row, col] = [0, 0, 255]  # Mark seams in red
+        return org_image
 
     def seams_insertion(self, num_pixel):
         if self.protect:
@@ -383,8 +391,10 @@ class SeamCarver:
 
 
     def save_result(self, filename):
-        self.visualize_removed_seams()
-        cv2.imwrite(filename[:-4] + "_annotated.jpg", self.org_image.astype(np.uint8))
+        if hasattr(self, 'col_image'):
+            cv2.imwrite(filename[:-4] + "_vertical_annotated.jpg", self.col_image.astype(np.uint8))
+        if hasattr(self, 'row_image'):
+            cv2.imwrite(filename[:-4] + "_horizontal_annotated.jpg", self.row_image.astype(np.uint8))
         cv2.imwrite(filename, self.out_image.astype(np.uint8))
 
 
