@@ -9,6 +9,7 @@ Seam carving is a content-aware image resizing technique that removes or inserts
 ## Example Images
 <p align="center">
   <img src="in/images/image.jpg" alt="Original Image" width="300" style="margin-right:20px;" />
+  <img src="out/images/image_result_vertical_annotated.jpg" alt="Annotated Original Image" width="300" style="margin-right:20px;" />
   <img src="out/images/image_result.png" alt="Resized Image" width="200" />
 </p>
 
